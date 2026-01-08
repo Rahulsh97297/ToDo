@@ -163,7 +163,7 @@ USING (bucket_id = 'avatars');
 ## Authentication Flow
 
 1. **Sign Up**: User enters email, password, and optional name
-2. **Email Verification**: Supabase sends a 6-digit OTP code to the user's email
+2. **Email Verification**: Supabase sends an 8-digit OTP code to the user's email
 3. **Verify OTP**: User enters the code in the app to verify their account
 4. **Sign In**: After verification, user can sign in with email/password
 5. **Session**: Session persists across page refreshes

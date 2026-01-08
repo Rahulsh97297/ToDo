@@ -86,10 +86,10 @@ export default function AuthPage() {
   };
 
   const handleVerifyOtp = async () => {
-    if (otpCode.length !== 6) {
+    if (otpCode.length !== 8) {
       toast({
         title: 'Invalid code',
-        description: 'Please enter the 6-digit code from your email.',
+        description: 'Please enter the 8-digit code from your email.',
         variant: 'destructive',
       });
       return;
@@ -179,13 +179,13 @@ export default function AuthPage() {
                 Verify your email
               </CardTitle>
               <CardDescription data-testid="text-verify-description">
-                Enter the 6-digit code we sent to <strong>{email}</strong>
+                Enter the 8-digit code we sent to <strong>{email}</strong>
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
               <div className="flex justify-center">
                 <InputOTP
-                  maxLength={6}
+                  maxLength={8}
                   value={otpCode}
                   onChange={(value) => setOtpCode(value)}
                   data-testid="input-otp"
@@ -195,8 +195,12 @@ export default function AuthPage() {
                     <InputOTPSlot index={1} />
                     <InputOTPSlot index={2} />
                     <InputOTPSlot index={3} />
+                  </InputOTPGroup>
+                  <InputOTPGroup>
                     <InputOTPSlot index={4} />
                     <InputOTPSlot index={5} />
+                    <InputOTPSlot index={6} />
+                    <InputOTPSlot index={7} />
                   </InputOTPGroup>
                 </InputOTP>
               </div>
@@ -210,7 +214,7 @@ export default function AuthPage() {
               <Button 
                 className="w-full" 
                 onClick={handleVerifyOtp}
-                disabled={isLoading || otpCode.length !== 6}
+                disabled={isLoading || otpCode.length !== 8}
                 data-testid="button-verify-otp"
               >
                 {isLoading ? 'Verifying...' : 'Verify Email'}
