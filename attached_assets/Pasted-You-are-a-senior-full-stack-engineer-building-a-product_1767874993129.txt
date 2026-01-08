@@ -1,0 +1,80 @@
+You are a senior full-stack engineer building a production-ready TODO application.
+
+GOAL:
+Create a complete TODO application with frontend, backend, and database using Supabase. 
+The app must support authentication (login, signup, logout), secure data access, and real-world best practices.
+
+TECH STACK:
+- Frontend: React (with modern hooks), Vite or Next.js
+- Styling: Tailwind CSS (clean, responsive UI)
+- Backend: Node.js + Express OR Next.js API routes
+- Database & Auth: Supabase (PostgreSQL + Supabase Auth)
+- State management: React Context or lightweight store
+- Environment variables for secrets
+
+CORE FEATURES:
+1. Authentication
+   - User signup with email & password
+   - User login
+   - User logout
+   - Session persistence
+   - Protected routes (unauthenticated users cannot access TODOs)
+
+2. TODO Features
+   - Create a new todo
+   - Read all todos for the logged-in user
+   - Update todo (title, completed status)
+   - Delete todo
+   - Mark todo as completed / pending
+   - Todos must be user-specific (no cross-user access)
+
+3. Database (Supabase)
+   - Create a `todos` table with:
+     - id (uuid, primary key)
+     - user_id (foreign key linked to auth.users)
+     - title (text)
+     - is_completed (boolean)
+     - created_at (timestamp)
+   - Enable Row Level Security (RLS)
+   - Policies:
+     - Users can only read their own todos
+     - Users can only create/update/delete their own todos
+
+4. Backend API
+   - REST endpoints:
+     - POST /todos
+     - GET /todos
+     - PUT /todos/:id
+     - DELETE /todos/:id
+   - Validate requests
+   - Handle errors gracefully
+   - Secure Supabase service role usage (if required)
+
+5. Frontend UI
+   - Login page
+   - Signup page
+   - Todo dashboard
+   - Logout button
+   - Loading states & error messages
+   - Mobile-responsive design
+
+6. Production-Level Practices
+   - Clean folder structure
+   - Reusable components
+   - Environment variable usage (.env)
+   - Proper error handling
+   - Comments explaining important logic
+   - No hard-coded secrets
+   - Optimized API calls
+
+DELIVERABLES:
+- Frontend code
+- Backend code
+- Supabase SQL schema
+- Supabase RLS policies
+- Instructions to run locally
+- Explanation of how auth, database, and API work together
+
+IMPORTANT:
+Treat this like a real SaaS-grade TODO app.
+Code should be clean, scalable, and production-ready.
