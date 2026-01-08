@@ -1,15 +1,16 @@
 import { useState } from 'react';
 import { useLocation } from 'wouter';
-import { CheckSquare, Eye, EyeOff, ArrowLeft } from 'lucide-react';
+import { CheckSquare, Eye, EyeOff, ArrowLeft, Mail } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 import { ThemeToggle } from '@/components/theme-toggle';
 import { useToast } from '@/hooks/use-toast';
 import { useSupabaseAuth } from '@/hooks/use-supabase-auth';
 
-type AuthMode = 'signin' | 'signup';
+type AuthMode = 'signin' | 'signup' | 'verify';
 
 export default function AuthPage() {
   const [, setLocation] = useLocation();
@@ -35,26 +36,32 @@ export default function AuthPage() {
 
     try {
       if (mode === 'signup') {
-        const { error } = await signUp(email, password, firstName, lastName);
+        const { data, error } = await signUp(email, password, firstName, lastName);
         if (error) {
           toast({
             title: 'Sign up failed',
             description: error.message,
             variant: 'destructive',
           });
-        } else {
+        } else if (data?.user && !data.session) {
+          setMode('verify');
           toast({
-            title: 'Account created!',
-            description: 'Please check your email to confirm your account, or sign in if email confirmation is disabled.',
+            title: 'Check your email',
+            description: 'We sent you a verification link to confirm your account.',
           });
-          setMode('signin');
+        } else {
+          setLocation('/');
         }
       } else {
         const { error } = await signIn(email, password);
         if (error) {
+          let message = error.message;
+          if (error.message.includes('Email not confirmed')) {
+            message = 'Please verify your email before signing in. Check your inbox for the verification link.';
+          }
           toast({
             title: 'Sign in failed',
-            description: error.message,
+            description: message,
             variant: 'destructive',
           });
         } else {
@@ -73,6 +80,57 @@ export default function AuthPage() {
     setFirstName('');
     setLastName('');
   };
+
+  if (mode === 'verify') {
+    return (
+      <div className="min-h-screen bg-background flex flex-col">
+        <header className="sticky top-0 z-50 border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+          <div className="mx-auto flex h-16 max-w-5xl items-center justify-between gap-4 px-4 md:px-8">
+            <div className="flex items-center gap-2">
+              <Button variant="ghost" size="icon" onClick={() => setMode('signin')} data-testid="button-back">
+                <ArrowLeft className="h-5 w-5" />
+              </Button>
+              <CheckSquare className="h-6 w-6 text-primary" />
+              <span className="text-xl font-bold tracking-tight">TaskFlow</span>
+            </div>
+            <ThemeToggle />
+          </div>
+        </header>
+
+        <main className="flex-1 flex items-center justify-center px-4 py-12">
+          <Card className="w-full max-w-md">
+            <CardHeader className="space-y-1 text-center">
+              <div className="mx-auto mb-4 inline-flex rounded-full bg-primary/10 p-4">
+                <Mail className="h-8 w-8 text-primary" />
+              </div>
+              <CardTitle className="text-2xl font-bold" data-testid="text-verify-title">
+                Check your email
+              </CardTitle>
+              <CardDescription data-testid="text-verify-description">
+                We sent a verification link to <strong>{email}</strong>
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <Alert>
+                <AlertDescription>
+                  Click the link in your email to verify your account, then come back here to sign in.
+                </AlertDescription>
+              </Alert>
+              
+              <Button 
+                className="w-full" 
+                variant="outline"
+                onClick={() => setMode('signin')}
+                data-testid="button-back-to-signin"
+              >
+                Back to sign in
+              </Button>
+            </CardContent>
+          </Card>
+        </main>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-background flex flex-col">
@@ -170,6 +228,11 @@ export default function AuthPage() {
                     )}
                   </Button>
                 </div>
+                {mode === 'signup' && (
+                  <p className="text-xs text-muted-foreground">
+                    Password must be at least 6 characters
+                  </p>
+                )}
               </div>
 
               <Button 

@@ -1,10 +1,11 @@
 import { useState } from "react";
-import { CheckSquare, LogOut } from "lucide-react";
+import { CheckSquare, LogOut, User, Settings } from "lucide-react";
 import { useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { useSupabaseAuth } from "@/hooks/use-supabase-auth";
+import { useProfile } from "@/hooks/use-profile";
 import { useToast } from "@/hooks/use-toast";
 import {
   DropdownMenu,
@@ -13,20 +14,32 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { AvatarUpload } from "@/components/avatar-upload";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 
 export function Header() {
   const { user, signOut } = useSupabaseAuth();
+  const { profile, uploadAvatar, updateProfile, isUploadingAvatar, isUpdating } = useProfile();
   const { toast } = useToast();
   const [, setLocation] = useLocation();
   const [isLoggingOut, setIsLoggingOut] = useState(false);
+  const [showProfileDialog, setShowProfileDialog] = useState(false);
+  const [editName, setEditName] = useState('');
 
-  const userMetadata = user?.user_metadata || {};
-  const firstName = userMetadata.first_name || '';
-  const lastName = userMetadata.last_name || '';
   const email = user?.email || '';
+  const displayName = profile?.full_name || user?.user_metadata?.first_name || email.split('@')[0];
+  const avatarUrl = profile?.avatar_url || null;
 
-  const initials = firstName && lastName
-    ? `${firstName[0]}${lastName[0]}`.toUpperCase()
+  const initials = displayName
+    ? displayName.split(' ').map((n: string) => n[0]).join('').toUpperCase().slice(0, 2)
     : email?.[0]?.toUpperCase() || 'U';
 
   const handleSignOut = async () => {
@@ -44,93 +57,189 @@ export function Header() {
     }
   };
 
+  const handleAvatarUpload = (file: File) => {
+    uploadAvatar(file, {
+      onSuccess: () => {
+        toast({
+          title: "Avatar updated",
+          description: "Your profile photo has been updated.",
+        });
+      },
+      onError: (error: Error) => {
+        toast({
+          title: "Upload failed",
+          description: error.message,
+          variant: "destructive",
+        });
+      },
+    });
+  };
+
+  const handleUpdateName = () => {
+    if (editName.trim()) {
+      updateProfile({ full_name: editName.trim() }, {
+        onSuccess: () => {
+          toast({
+            title: "Profile updated",
+            description: "Your name has been updated.",
+          });
+          setShowProfileDialog(false);
+        },
+        onError: (error: Error) => {
+          toast({
+            title: "Update failed",
+            description: error.message,
+            variant: "destructive",
+          });
+        },
+      });
+    }
+  };
+
+  const openProfileDialog = () => {
+    setEditName(profile?.full_name || '');
+    setShowProfileDialog(true);
+  };
+
   return (
-    <header className="sticky top-0 z-50 border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-      <div className="mx-auto flex h-16 max-w-5xl items-center justify-between gap-4 px-4 md:px-8">
-        <div className="flex items-center gap-2">
-          <CheckSquare className="h-6 w-6 text-primary" />
-          <span className="text-xl font-bold tracking-tight" data-testid="text-app-title">
-            TaskFlow
-          </span>
-        </div>
-
-        <div className="flex items-center gap-2">
-          <ThemeToggle />
-          
-          <Button 
-            variant="outline" 
-            size="sm"
-            onClick={handleSignOut}
-            disabled={isLoggingOut}
-            className="gap-2"
-            data-testid="button-signout"
-          >
-            <LogOut className="h-4 w-4" />
-            <span className="hidden sm:inline">
-              {isLoggingOut ? "Signing out..." : "Sign out"}
+    <>
+      <header className="sticky top-0 z-50 border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+        <div className="mx-auto flex h-16 max-w-5xl items-center justify-between gap-4 px-4 md:px-8">
+          <div className="flex items-center gap-2">
+            <CheckSquare className="h-6 w-6 text-primary" />
+            <span className="text-xl font-bold tracking-tight" data-testid="text-app-title">
+              TaskFlow
             </span>
-          </Button>
+          </div>
 
-          {user && (
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button
-                  variant="ghost"
-                  className="relative h-9 w-9 rounded-full"
-                  data-testid="button-user-menu"
-                >
-                  <Avatar className="h-8 w-8">
-                    <AvatarImage
-                      src={userMetadata.avatar_url || undefined}
-                      alt={firstName || "User"}
-                    />
-                    <AvatarFallback className="bg-primary text-primary-foreground text-sm font-medium">
-                      {initials}
-                    </AvatarFallback>
-                  </Avatar>
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-56">
-                <div className="flex items-center gap-2 p-2">
-                  <Avatar className="h-8 w-8">
-                    <AvatarImage
-                      src={userMetadata.avatar_url || undefined}
-                      alt={firstName || "User"}
-                    />
-                    <AvatarFallback className="bg-primary text-primary-foreground text-sm font-medium">
-                      {initials}
-                    </AvatarFallback>
-                  </Avatar>
-                  <div className="flex flex-col space-y-0.5">
-                    <p
-                      className="text-sm font-medium leading-none"
-                      data-testid="text-user-name"
-                    >
-                      {firstName || lastName ? `${firstName} ${lastName}`.trim() : 'User'}
-                    </p>
-                    <p
-                      className="text-xs text-muted-foreground leading-none"
-                      data-testid="text-user-email"
-                    >
-                      {email}
-                    </p>
+          <div className="flex items-center gap-2">
+            <ThemeToggle />
+            
+            <Button 
+              variant="outline" 
+              size="sm"
+              onClick={handleSignOut}
+              disabled={isLoggingOut}
+              className="gap-2"
+              data-testid="button-signout"
+            >
+              <LogOut className="h-4 w-4" />
+              <span className="hidden sm:inline">
+                {isLoggingOut ? "Signing out..." : "Sign out"}
+              </span>
+            </Button>
+
+            {user && (
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    className="relative h-9 w-9 rounded-full"
+                    data-testid="button-user-menu"
+                  >
+                    <Avatar className="h-8 w-8">
+                      <AvatarImage
+                        src={avatarUrl || undefined}
+                        alt={displayName}
+                      />
+                      <AvatarFallback className="bg-primary text-primary-foreground text-sm font-medium">
+                        {initials}
+                      </AvatarFallback>
+                    </Avatar>
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-56">
+                  <div className="flex items-center gap-2 p-2">
+                    <Avatar className="h-8 w-8">
+                      <AvatarImage
+                        src={avatarUrl || undefined}
+                        alt={displayName}
+                      />
+                      <AvatarFallback className="bg-primary text-primary-foreground text-sm font-medium">
+                        {initials}
+                      </AvatarFallback>
+                    </Avatar>
+                    <div className="flex flex-col space-y-0.5">
+                      <p
+                        className="text-sm font-medium leading-none"
+                        data-testid="text-user-name"
+                      >
+                        {displayName}
+                      </p>
+                      <p
+                        className="text-xs text-muted-foreground leading-none"
+                        data-testid="text-user-email"
+                      >
+                        {email}
+                      </p>
+                    </div>
                   </div>
-                </div>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem
-                  onClick={handleSignOut}
-                  disabled={isLoggingOut}
-                  className="text-destructive focus:text-destructive cursor-pointer"
-                  data-testid="button-logout-dropdown"
-                >
-                  <LogOut className="mr-2 h-4 w-4" />
-                  {isLoggingOut ? "Signing out..." : "Sign out"}
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
-          )}
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem
+                    onClick={openProfileDialog}
+                    className="cursor-pointer"
+                    data-testid="button-edit-profile"
+                  >
+                    <Settings className="mr-2 h-4 w-4" />
+                    Edit Profile
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem
+                    onClick={handleSignOut}
+                    disabled={isLoggingOut}
+                    className="text-destructive focus:text-destructive cursor-pointer"
+                    data-testid="button-logout-dropdown"
+                  >
+                    <LogOut className="mr-2 h-4 w-4" />
+                    {isLoggingOut ? "Signing out..." : "Sign out"}
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            )}
+          </div>
         </div>
-      </div>
-    </header>
+      </header>
+
+      <Dialog open={showProfileDialog} onOpenChange={setShowProfileDialog}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Edit Profile</DialogTitle>
+            <DialogDescription>
+              Update your profile photo and display name.
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="flex flex-col items-center gap-6 py-4">
+            <AvatarUpload
+              avatarUrl={avatarUrl}
+              fallback={initials}
+              onUpload={handleAvatarUpload}
+              isUploading={isUploadingAvatar}
+              size="lg"
+            />
+            
+            <div className="w-full space-y-2">
+              <Label htmlFor="fullName">Display Name</Label>
+              <div className="flex gap-2">
+                <Input
+                  id="fullName"
+                  value={editName}
+                  onChange={(e) => setEditName(e.target.value)}
+                  placeholder="Your name"
+                  data-testid="input-display-name"
+                />
+                <Button 
+                  onClick={handleUpdateName}
+                  disabled={isUpdating || !editName.trim()}
+                  data-testid="button-save-name"
+                >
+                  {isUpdating ? "Saving..." : "Save"}
+                </Button>
+              </div>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+    </>
   );
 }
