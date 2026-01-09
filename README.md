@@ -1,97 +1,72 @@
-# TaskFlow - Modern Todo Application
+# ToDo Application
 
-A production-ready todo application built with React, TypeScript, and Supabase.
+A full-stack Todo application built with React, Express, and Supabase, optimized for Android deployment via Capacitor.
 
 ## Features
 
-- User authentication with email OTP verification
-- User profiles with avatar upload
-- Create, read, update, and delete todos
-- User-specific data isolation with Row Level Security
-- Dark/light theme support
-- Responsive design
+*   **Authentication**: Secure sign-up and sign-in using Supabase Auth (JWT).
+*   **Task Management**: Create, read, update, and delete tasks.
+*   **Real-time Storage**: Data is synced with Supabase PostgreSQL database.
+*   **Android APK**: Standalone Android application support using Capacitor.
+*   **Secure API**: Express backend with middleware for token verification.
 
 ## Tech Stack
 
-- **Frontend:** React 18, TypeScript, Vite, Tailwind CSS, shadcn/ui
-- **Backend:** Express.js (minimal - serves config only)
-- **Database:** Supabase (PostgreSQL with RLS)
-- **Authentication:** Supabase Auth (email/password with OTP)
-- **Storage:** Supabase Storage (avatar images)
+*   **Frontend**: React, Vite, TypeScript, Tailwind CSS, ShadCN UI.
+*   **Backend**: Node.js, Express.js.
+*   **Database & Auth**: Supabase.
+*   **Mobile**: Capacitor (Android).
 
-## Getting Started
+## Setup & Installation
 
-### Prerequisites
+1.  **Clone the repository**
+    ```bash
+    git clone <repository-url>
+    cd ToDo
+    ```
 
-1. Create a Supabase project at https://supabase.com
-2. Get your project URL and anon key from Settings > API
+2.  **Install Dependencies**
+    ```bash
+    npm install
+    ```
 
-### Environment Variables
+3.  **Environment Variables**
+    Create a `.env` file in the root directory with the following keys:
+    ```env
+    VITE_SUPABASE_URL=your_supabase_url
+    VITE_SUPABASE_ANON_KEY=your_supabase_anon_key
+    SUPABASE_URL=your_supabase_url
+    SUPABASE_ANON_KEY=your_supabase_anon_key
+    DATABASE_URL=your_database_connection_string
+    SESSION_SECRET=your_session_secret
+    ```
 
-Add these to your environment:
+4.  **Run Locally**
+    ```bash
+    npm run dev
+    ```
 
-```
-SUPABASE_URL=your_supabase_project_url
-SUPABASE_ANON_KEY=your_supabase_anon_key
-```
+## Building for Android
 
-### Supabase Setup
+1.  **Build Web Assets**
+    ```bash
+    npm run build
+    ```
 
-1. Enable Email provider in Authentication > Providers
-2. Enable "Confirm email" for OTP verification
-3. Run the SQL in Supabase SQL Editor to create tables and RLS policies (see setup instructions below)
-4. Create an `avatars` storage bucket with public read access
+2.  **Sync Capacitor**
+    ```bash
+    npx cap sync
+    ```
 
-### Database Setup
+3.  **Open in Android Studio**
+    ```bash
+    npx cap open android
+    ```
+    From Android Studio, you can build the APK using **Build > Build Bundle(s) / APK(s) > Build APK(s)**.
 
-Run this SQL in your Supabase SQL Editor:
+## Project Structure
 
-```sql
--- Profiles table
-CREATE TABLE profiles (
-  id UUID PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,
-  full_name TEXT,
-  avatar_url TEXT,
-  created_at TIMESTAMPTZ DEFAULT now() NOT NULL
-);
-
-ALTER TABLE profiles ENABLE ROW LEVEL SECURITY;
-
-CREATE POLICY "Users can view own profile" ON profiles FOR SELECT USING (auth.uid() = id);
-CREATE POLICY "Users can insert own profile" ON profiles FOR INSERT WITH CHECK (auth.uid() = id);
-CREATE POLICY "Users can update own profile" ON profiles FOR UPDATE USING (auth.uid() = id);
-
--- Todos table
-CREATE TABLE todos (
-  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
-  user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE NOT NULL,
-  title TEXT NOT NULL,
-  is_completed BOOLEAN DEFAULT false NOT NULL,
-  created_at TIMESTAMPTZ DEFAULT now() NOT NULL
-);
-
-ALTER TABLE todos ENABLE ROW LEVEL SECURITY;
-
-CREATE POLICY "Users can view own todos" ON todos FOR SELECT USING (auth.uid() = user_id);
-CREATE POLICY "Users can insert own todos" ON todos FOR INSERT WITH CHECK (auth.uid() = user_id);
-CREATE POLICY "Users can update own todos" ON todos FOR UPDATE USING (auth.uid() = user_id);
-CREATE POLICY "Users can delete own todos" ON todos FOR DELETE USING (auth.uid() = user_id);
-```
-
-### Installation
-
-```bash
-npm install
-npm run dev
-```
-
-## Usage
-
-1. Sign up with your email and password
-2. Enter the 8-digit verification code sent to your email
-3. Start creating and managing your todos
-4. Upload a profile avatar in the header menu
-
-## License
-
-MIT
+*   `/client` - React frontend code.
+*   `/server` - Express backend code.
+*   `/shared` - Shared types and schema (Drizzle/Zod).
+*   `/android` - Native Android project files.
