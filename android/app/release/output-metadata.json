@@ -4,7 +4,7 @@
     "type": "APK",
     "kind": "Directory"
   },
-  "applicationId": "com.todo.app",
+  "applicationId": "com.devanshu.todoapp",
   "variantName": "release",
   "elements": [
     {

@@ -1,4 +1,4 @@
-package com.todo.app;
+package com.devanshu.taskflow;
 
 import com.getcapacitor.BridgeActivity;
 

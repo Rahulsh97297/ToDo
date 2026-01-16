@@ -1,36 +1,42 @@
 // Top-level build file where you can add configuration options common to all sub-projects/modules.
 
 buildscript {
-    
+
     repositories {
         google()
         mavenCentral()
     }
-    dependencies {
-        classpath 'com.android.tools.build:gradle:8.13.2'
-        classpath 'com.google.gms:google-services:4.4.2'
 
-        // NOTE: Do not place your application dependencies here; they belong
-        // in the individual module build.gradle files
+    dependencies {
+        // Android Gradle Plugin
+        classpath "com.android.tools.build:gradle:8.7.3"
+
+        // Google Services (Firebase / Google APIs)
+        classpath "com.google.gms:google-services:4.4.2"
     }
 }
 
 apply from: "variables.gradle"
 
 allprojects {
+
     repositories {
         google()
         mavenCentral()
     }
+
+    // 🔧 Fix Kotlin stdlib conflicts (very important for Capacitor)
     configurations.all {
         resolutionStrategy.eachDependency { details ->
-            if (details.requested.group == 'org.jetbrains.kotlin' && details.requested.name.startsWith('kotlin-stdlib')) {
-                details.useVersion '1.8.22'
+            if (details.requested.group == "org.jetbrains.kotlin" &&
+                details.requested.name.startsWith("kotlin-stdlib")) {
+                details.useVersion "1.8.22"
             }
         }
     }
 }
 
-task clean(type: Delete) {
+// Clean task
+tasks.register("clean", Delete) {
     delete rootProject.buildDir
 }
